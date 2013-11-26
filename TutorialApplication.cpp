@@ -80,10 +80,23 @@ void TutorialApplication::createCamera()
     mCameraMan->setStyle(OgreBites::CS_ORBIT);
 }
 
+Ray TutorialApplication::getMouseRay() {
+    const OIS::MouseState s = mMouse->getMouseState();
+    Viewport *vp = m_SceneMgr->getCurrentViewport();
+
+    return mCamera->getCameraToViewportRay(
+                (Real) s.X.abs / vp->getActualWidth(),
+                (Real) s.Y.abs / vp->getActualHeight());
+}
+
 bool TutorialApplication::keyPressed(const OIS::KeyEvent &arg)
 {
     if (arg.key == OIS::KC_LSHIFT || arg.key == OIS::KC_RSHIFT) {
         std::cout << "Entering vertical mode" << std::endl;
+
+        m_Ydelta = 0;
+        m_Ystart = m_activeLevel.d;
+
         m_verticalMode = true;
     }
     return BaseApplication::keyPressed(arg);
@@ -107,20 +120,15 @@ bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
               << arg.state.Z.abs << ")" << std::endl;
     std::cout << "plane at Y = " << m_activeLevel.d << std::endl;
 
-    Viewport *vp = m_SceneMgr->getCurrentViewport();
-    Ray mouseRay = mCamera->getCameraToViewportRay(
-                (Real) arg.state.X.abs / vp->getActualWidth(),
-                (Real) arg.state.Y.abs / vp->getActualHeight());
+    Ray mouseRay = getMouseRay();
 
-    if (mKeyboard->isModifierDown(OIS::Keyboard::Shift)) {
+    if (m_verticalMode) {
         m_Ydelta += arg.state.Y.rel;
         Real Yblocks = floor((m_Ystart + m_Ydelta) / GRID_SPACING) * GRID_SPACING;
         m_activeLevel.d = Yblocks;
         const Vector3 p = m_cursorNode->getPosition();
-        m_cursorNode->setPosition(Vector3(p.x, p.y, p.z));
+        m_cursorNode->setPosition(Vector3(p.x, m_activeLevel.d, p.z));
     } else {
-        m_Ydelta = 0;
-        m_Ystart = arg.state.Y.abs;
 //        m_PrevPlane = m_activeLevel;
     auto r = mouseRay.intersects(m_activeLevel);
     if (r.first) {
@@ -133,20 +141,6 @@ bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
     }
     }
 
-//    m_rayScnQuery->setRay(mouseRay);
-//    RaySceneQueryResult result = m_rayScnQuery->execute();
-
-//    for (RaySceneQueryResultEntry &r : result) {
-////        std::cout << "hit object '" << r.movable->getName() << "' at point !" << std::endl;
-//        Vector3 pos = mouseRay.getPoint(r.distance);
-//        if (r.movable->getName() == "grid") {
-//            m_cursorNode->setPosition(
-//                        Vector3(floor(pos.x / GRID_SPACING) * GRID_SPACING,
-//                                pos.y,
-//                                floor(pos.z / GRID_SPACING) * GRID_SPACING));
-//        }
-//        r.movable->setVisible(!r.movable->getVisible());
-//    }
 }
 
 
