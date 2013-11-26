@@ -24,7 +24,8 @@ using namespace Ogre;
 
 //-------------------------------------------------------------------------------------
 TutorialApplication::TutorialApplication(void)
-    : m_activeLevel(Vector3::UNIT_Y, 0)
+    : m_activeLevel(Vector3::UNIT_Y, 0),
+      m_verticalMode(false)
 {
 }
 //-------------------------------------------------------------------------------------
@@ -79,6 +80,24 @@ void TutorialApplication::createCamera()
     mCameraMan->setStyle(OgreBites::CS_ORBIT);
 }
 
+bool TutorialApplication::keyPressed(const OIS::KeyEvent &arg)
+{
+    if (arg.key == OIS::KC_LSHIFT || arg.key == OIS::KC_RSHIFT) {
+        std::cout << "Entering vertical mode" << std::endl;
+        m_verticalMode = true;
+    }
+    return BaseApplication::keyPressed(arg);
+}
+
+bool TutorialApplication::keyReleased(const OIS::KeyEvent &arg)
+{
+    if (arg.key == OIS::KC_LSHIFT || arg.key == OIS::KC_RSHIFT) {
+        std::cout << "Exiting vertical mode" << std::endl;
+        m_verticalMode = false;
+    }
+    return BaseApplication::keyReleased(arg);
+}
+
 bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
 {
     BaseApplication::mouseMoved(arg);
@@ -87,6 +106,7 @@ bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
               << arg.state.Y.abs << ","
               << arg.state.Z.abs << ")" << std::endl;
     std::cout << "plane at Y = " << m_activeLevel.d << std::endl;
+
     Viewport *vp = m_SceneMgr->getCurrentViewport();
     Ray mouseRay = mCamera->getCameraToViewportRay(
                 (Real) arg.state.X.abs / vp->getActualWidth(),

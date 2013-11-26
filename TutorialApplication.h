@@ -36,6 +36,8 @@ protected:
     virtual void createCamera(void) override;
     virtual void createScene(void);
 
+    virtual bool keyPressed(const OIS::KeyEvent &arg) override;
+    virtual bool keyReleased(const OIS::KeyEvent &arg) override;
     virtual bool mouseMoved(const OIS::MouseEvent &arg) override;
 
 private:
@@ -44,6 +46,8 @@ private:
     Ogre::SceneNode *m_cursorNode;
     Ogre::RaySceneQuery *m_rayScnQuery;
     Ogre::Plane m_activeLevel;
+
+    bool m_verticalMode;
 };
 
 #endif // #ifndef __TutorialApplication_h_
