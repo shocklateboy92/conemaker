@@ -51,13 +51,9 @@ protected:
 private:
     Ogre::Ray getMouseRay(void);
 
-    Ogre::Real m_Ydelta;
-    Ogre::Real m_Ystart;
     Ogre::SceneNode *m_cursorNode;
-    Ogre::RaySceneQuery *m_rayScnQuery;
     Ogre::Plane m_activeLevel;
 
-    Ogre::Plane m_verticalLevel;
     bool m_verticalMode;
 
     Mode m_mode;

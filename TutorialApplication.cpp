@@ -41,7 +41,7 @@ void TutorialApplication::chooseSceneManager()
 void TutorialApplication::createFrameListener()
 {
     BaseApplication::createFrameListener();
-    m_rayScnQuery = m_SceneMgr->createRayQuery(Ogre::Ray());
+//    m_rayScnQuery = m_SceneMgr->createRayQuery(Ogre::Ray());
 }
 
 //-------------------------------------------------------------------------------------
@@ -120,30 +120,26 @@ bool TutorialApplication::keyReleased(const OIS::KeyEvent &arg)
 bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
 {
     BaseApplication::mouseMoved(arg);
-    std::cout << "moust at ("
-              << arg.state.X.abs << ","
-              << arg.state.Y.abs << ","
-              << arg.state.Z.abs << ")" << std::endl;
-    std::cout << "plane at Y = " << m_activeLevel.d << std::endl;
+//    std::cout << "moust at ("
+//              << arg.state.X.abs << ","
+//              << arg.state.Y.abs << ","
+//              << arg.state.Z.abs << ")" << std::endl;
+//    std::cout << "plane at Y = " << m_activeLevel.d << std::endl;
 
     Ray mouseRay = getMouseRay();
 
     if (m_verticalMode) {
-        m_Ydelta += arg.state.Y.rel;
-        Real Yblocks = floor((m_Ystart + m_Ydelta) / GRID_SPACING) * GRID_SPACING;
-        m_activeLevel.d = Yblocks;
-        const Vector3 p = m_cursorNode->getPosition();
-        m_cursorNode->setPosition(Vector3(p.x, m_activeLevel.d, p.z));
+        // ignored for now, untill I figure out how to make it intuitive
     } else {
-//        m_PrevPlane = m_activeLevel;
-    auto r = mouseRay.intersects(m_activeLevel);
-    if (r.first) {
-        auto pos = mouseRay.getPoint(r.second);
-        Vector3 gridPos = Vector3(floor(pos.x / GRID_SPACING) * GRID_SPACING,
-                                  pos.y,
-                                  floor(pos.z / GRID_SPACING) * GRID_SPACING);
-        m_cursorNode->setPosition(gridPos);
-
+        auto r = mouseRay.intersects(m_activeLevel);
+        if (r.first) {
+            auto pos = mouseRay.getPoint(r.second);
+            auto gridPos =
+                    Vector3(floor(pos.x / GRID_SPACING) * GRID_SPACING,
+                            pos.y,
+                            floor(pos.z / GRID_SPACING) * GRID_SPACING);
+            m_cursorNode->setPosition(gridPos);
+        }
     }
 
 }
