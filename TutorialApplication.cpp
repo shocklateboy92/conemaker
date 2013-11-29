@@ -91,14 +91,20 @@ Ray TutorialApplication::getMouseRay() {
 
 bool TutorialApplication::keyPressed(const OIS::KeyEvent &arg)
 {
-    if (arg.key == OIS::KC_LSHIFT || arg.key == OIS::KC_RSHIFT) {
+    switch (arg.key) {
+    case OIS::KC_LSHIFT:
+    case OIS::KC_RSHIFT:
         std::cout << "Entering vertical mode" << std::endl;
-
-        m_Ydelta = 0;
-        m_Ystart = m_activeLevel.d;
-
         m_verticalMode = true;
+        break;
+    case OIS::KC_1:
+        m_mode = NoneMode;
+        break;
+    case OIS::KC_2:
+        m_mode = TrollMode;
+        break;
     }
+
     return BaseApplication::keyPressed(arg);
 }
 
@@ -139,8 +145,27 @@ bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
         m_cursorNode->setPosition(gridPos);
 
     }
+
+}
+
+bool TutorialApplication::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id)
+{
+    if (m_mode == TrollMode) {
+        const Vector3 p = m_cursorNode->getPosition();
+        Ogre::Entity *troll = m_SceneMgr->createEntity("ogrehead.mesh");
+        Vector3 bounds = troll->getBoundingBox().getSize();
+        Real dim = std::max({bounds.x, bounds.y, bounds.z});
+        Real scale = GRID_SPACING / dim;
+        bounds = bounds * scale * 0.5f;
+
+        Ogre::SceneNode *node = m_SceneMgr->getRootSceneNode()->createChildSceneNode();
+        node->setPosition(p.x + bounds.x, p.y + bounds.y, p.z + bounds.z);
+//        node->showBoundingBox(true);
+        node->scale(scale, scale, scale);
+        node->attachObject(troll);
     }
 
+    return BaseApplication::mouseReleased(arg, id);
 }
 
 

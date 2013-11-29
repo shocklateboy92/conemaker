@@ -29,6 +29,13 @@ public:
     TutorialApplication(void);
     virtual ~TutorialApplication(void);
 
+    enum Mode {
+        NoneMode = 0,
+        TrollMode,
+        PartyMode,
+        WitchMode
+    };
+
 protected:
     virtual void chooseSceneManager() override;
     virtual void createFrameListener() override;
@@ -39,6 +46,7 @@ protected:
     virtual bool keyPressed(const OIS::KeyEvent &arg) override;
     virtual bool keyReleased(const OIS::KeyEvent &arg) override;
     virtual bool mouseMoved(const OIS::MouseEvent &arg) override;
+    virtual bool mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) override;
 
 private:
     Ogre::Ray getMouseRay(void);
@@ -51,6 +59,8 @@ private:
 
     Ogre::Plane m_verticalLevel;
     bool m_verticalMode;
+
+    Mode m_mode;
 };
 
 #endif // #ifndef __TutorialApplication_h_
