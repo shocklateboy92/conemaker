@@ -26,6 +26,7 @@ public:
     static const constexpr Ogre::Real GRID_SIZE = 100.0f;
     static const constexpr Ogre::Real GRID_SPACING = 10.0f;
     static const constexpr Ogre::Real CURSOR_SIZE = GRID_SPACING;
+    static const constexpr Ogre::Real CONE_SIZE = 60.0f;
 
     static const constexpr auto BASE_MATERIAL = "BaseWhiteNoLighting";
     static const std::vector<Ogre::Vector3> CONE_CASES;
@@ -54,6 +55,7 @@ protected:
 
 private:
     Ogre::Ray getMouseRay(void);
+    void createCones(Ogre::ManualObject *obj, Ogre::Vector3 pos, Ogre::Vector3 dir);
 
     Ogre::SceneNode *m_cursorNode;
     Ogre::Plane m_activeLevel;

@@ -85,42 +85,22 @@ inline Real distance3(Real _x, Real _y, Real _z) {
     return d2 + floor(c * 1.75 / TutorialApplication::GRID_SPACING) * TutorialApplication::GRID_SPACING;
 }
 
-void make_cone(ManualObject *obj, Vector3 pos, Vector3 dir) {
-//    for (Vector3 c : TutorialApplication::CONE_CASES) {
-//        Vector3 pNext = pos + c;
-//        if (dir.angleBetween(c) <= Degree(45)) {
-////            std::cout << "checking point " << pos;
-//            Real xy = distance(pNext.x, pNext.y);
-//            Real yz = distance(pNext.y, pNext.z);
-//            Real xz = distance(pNext.x, pNext.z);
-////            std::cout << ", distance(" << xy << "," << yz << "," << xz << ")" << std::endl;
-//            if (xy == 60 && yz == 60 && xz == 60) {
-//                std::cout << "adding point" << std::endl;
-//                obj->position(pNext);
-//            } else {
-//                if (std::max({xy, yz, xz}) < 60) {
-//                    make_cone(obj, pNext, dir);
-//                }
-//            }
-//        }
-//    }
+void TutorialApplication::createCones(ManualObject *obj, Vector3 pos, Vector3 dir)
+{
     int bound = TutorialApplication::GRID_SIZE;
     int spacing = TutorialApplication::GRID_SPACING;
-    for (int x = -bound; x <= bound; x += spacing) {
-        for (int y = -bound; y <= bound; y += spacing) {
-            for (int z = -bound; z <= bound; z += spacing) {
-                std::cout << "checking point " << Vector3(x, y, z);
-                std::cout << ", distance = " << abs(distance3(x, y, z)) << std::endl;
-                if (dir.angleBetween(Vector3(x, y, z)) <= Degree(45) &&
-                        abs(distance3(x, y, z)) == 60) {
-                    std::cout << "adding point" << std::endl;
-                    obj->position(0, 0, 0);
-                    obj->position(x, y, z);
-                }
+
+    for (Vector3 c : CONE_CASES) {
+        if (c.angleBetween(dir) <= Degree(45)) {
+            Vector3 pNext = pos + c;
+            Real distance = distance3(pNext.x, pNext.y, pNext.z);
+            if (distance <= CONE_SIZE) {
+                createCones(obj, pNext, dir);
             }
         }
     }
 
+    obj->position(pos);
 }
 
 void TutorialApplication::createScene(void)
@@ -164,7 +144,7 @@ void TutorialApplication::createScene(void)
 //    }
     // for each cone case
     ManualObject *cone = m_SceneMgr->createManualObject("conePoints");
-    cone->begin(BASE_MATERIAL, RenderOperation::OT_LINE_LIST);
+    cone->begin(BASE_MATERIAL, RenderOperation::OT_LINE_STRIP);
 //    for (auto c : CONE_CASES) {
 //        auto ext = (c);
 //        cone->position(Vector3::ZERO);
@@ -172,7 +152,7 @@ void TutorialApplication::createScene(void)
 //    }
 
     Vector3 p = Vector3(1, 1, 1);
-    make_cone(cone, Vector3(0, 0, 0), p);
+    createCones(cone, Vector3::ZERO, p);
     cone->end();
     m_pointNode->attachObject(cone);
     m_pointNode->setVisible(false);
