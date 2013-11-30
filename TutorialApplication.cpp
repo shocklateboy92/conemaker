@@ -25,7 +25,8 @@ using namespace Ogre;
 //-------------------------------------------------------------------------------------
 TutorialApplication::TutorialApplication(void)
     : m_activeLevel(Vector3::UNIT_Y, 0),
-      m_verticalMode(false)
+      m_verticalMode(false),
+      m_pointNode(nullptr)
 {
 }
 //-------------------------------------------------------------------------------------
@@ -45,6 +46,49 @@ void TutorialApplication::createFrameListener()
 }
 
 //-------------------------------------------------------------------------------------
+const std::vector<Vector3> make_cases() {
+    std::vector<Vector3> v;
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int z = -1; z <= 1; z++) {
+                v.push_back(Vector3(x, y, z) *
+                            TutorialApplication::GRID_SPACING);
+            }
+        }
+    }
+
+    // remove the {0, 0, 0} case
+    v.erase(std::find(v.begin(), v.end(), Vector3(0, 0, 0)));
+    return v;
+}
+
+const std::vector<Vector3> TutorialApplication::CONE_CASES = make_cases();
+
+inline Real distance(Real x, Real y) {
+    return abs(x - y) + floor(std::min(x, y) * 1.5 / TutorialApplication::GRID_SPACING) * TutorialApplication::GRID_SPACING;
+}
+
+void make_cone(ManualObject *obj, Vector3 pos, Vector3 dir) {
+    for (Vector3 c : TutorialApplication::CONE_CASES) {
+        Vector3 pNext = pos + c;
+        if (dir.angleBetween(c) <= Degree(45)) {
+//            std::cout << "checking point " << pos;
+            Real xy = distance(pNext.x, pNext.y);
+            Real yz = distance(pNext.y, pNext.z);
+            Real xz = distance(pNext.x, pNext.z);
+//            std::cout << ", distance(" << xy << "," << yz << "," << xz << ")" << std::endl;
+            if (xy == 60 && yz == 60 && xz == 60) {
+                std::cout << "adding point" << std::endl;
+                obj->position(pNext);
+            } else {
+                if (std::max({xy, yz, xz}) < 60) {
+                    make_cone(obj, pNext, dir);
+                }
+            }
+        }
+    }
+}
+
 void TutorialApplication::createScene(void)
 {
     m_SceneMgr->setAmbientLight(Ogre::ColourValue(0.7f, 0.7f, 0.7f));
@@ -72,6 +116,33 @@ void TutorialApplication::createScene(void)
     plane->end();
     m_cursorNode = m_SceneMgr->getRootSceneNode()->createChildSceneNode("cursorNode");
     m_cursorNode->attachObject(plane);
+
+    m_pointNode = m_cursorNode->createChildSceneNode("coneBase");
+
+//    for (Vector3 c : CONE_CASES) {
+//        ManualObject *cone = m_SceneMgr->createManualObject();
+//        cone->begin(BASE_MATERIAL, RenderOperation::OT_LINE_LIST);
+//        cone->position(Vector3::ZERO);
+//        cone->position(c);
+//        cone->end();
+
+//        m_pointNode->createChildSceneNode();
+//    }
+    // for each cone case
+    ManualObject *cone = m_SceneMgr->createManualObject("conePoints");
+    cone->begin(BASE_MATERIAL, RenderOperation::OT_LINE_LIST);
+    for (auto c : CONE_CASES) {
+        auto ext = (c);
+        cone->position(Vector3::ZERO);
+        cone->position(ext);
+    }
+
+//    Vector3 p = Vector3(1, 1, 0);
+//    make_cone(cone, Vector3(0, 0, 0), p);
+    cone->end();
+    m_pointNode->attachObject(cone);
+    m_pointNode->setVisible(false);
+
 }
 
 void TutorialApplication::createCamera()
@@ -99,9 +170,18 @@ bool TutorialApplication::keyPressed(const OIS::KeyEvent &arg)
         break;
     case OIS::KC_1:
         m_mode = NoneMode;
+        m_cursorNode->setVisible(true);
+        m_pointNode->setVisible(false);
         break;
     case OIS::KC_2:
         m_mode = TrollMode;
+        m_cursorNode->setVisible(true);
+        m_pointNode->setVisible(false);
+        break;
+    case OIS::KC_3:
+        m_mode = WitchMode;
+        m_cursorNode->setVisible(false);
+        m_pointNode->setVisible(true);
         break;
     }
 
@@ -119,7 +199,7 @@ bool TutorialApplication::keyReleased(const OIS::KeyEvent &arg)
 
 bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
 {
-    BaseApplication::mouseMoved(arg);
+    auto ret = BaseApplication::mouseMoved(arg);
 //    std::cout << "moust at ("
 //              << arg.state.X.abs << ","
 //              << arg.state.Y.abs << ","
@@ -141,13 +221,15 @@ bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
             m_cursorNode->setPosition(gridPos);
         }
     }
-
+    return ret;
 }
 
 bool TutorialApplication::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id)
 {
     if (m_mode == TrollMode) {
         const Vector3 p = m_cursorNode->getPosition();
+        m_ogres.push_back(p);
+
         Ogre::Entity *troll = m_SceneMgr->createEntity("ogrehead.mesh");
         Vector3 bounds = troll->getBoundingBox().getSize();
         Real dim = std::max({bounds.x, bounds.y, bounds.z});

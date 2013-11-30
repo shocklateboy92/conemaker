@@ -18,6 +18,7 @@ This source file is part of the
 #define __TutorialApplication_h_
 
 #include "BaseApplication.h"
+#include <vector>
 
 class TutorialApplication : public BaseApplication
 {
@@ -25,6 +26,9 @@ public:
     static const constexpr Ogre::Real GRID_SIZE = 100.0f;
     static const constexpr Ogre::Real GRID_SPACING = 10.0f;
     static const constexpr Ogre::Real CURSOR_SIZE = GRID_SPACING;
+
+    static const constexpr auto BASE_MATERIAL = "BaseWhiteNoLighting";
+    static const std::vector<Ogre::Vector3> CONE_CASES;
 
     TutorialApplication(void);
     virtual ~TutorialApplication(void);
@@ -55,8 +59,10 @@ private:
     Ogre::Plane m_activeLevel;
 
     bool m_verticalMode;
-
     Mode m_mode;
+
+    std::vector<Ogre::Vector3> m_ogres;
+    Ogre::SceneNode *m_pointNode;
 };
 
 #endif // #ifndef __TutorialApplication_h_

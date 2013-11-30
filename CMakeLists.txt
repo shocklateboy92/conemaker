@@ -28,6 +28,8 @@ endif(WIN32)
 if(UNIX)
 	  set(CMAKE_MODULE_PATH "/usr/lib/OGRE/cmake/;${CMAKE_MODULE_PATH}")
 	  set(OGRE_SAMPLES_INCLUDEPATH "/usr/share/OGRE/samples/Common/include/") # Otherwise, this one
+      set(CMAKE_C_COMPILER "clang")
+      set(CMAKE_CXX_COMPILER "clang++")
 endif(UNIX)
  
 if (CMAKE_BUILD_TYPE STREQUAL "")
