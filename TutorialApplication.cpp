@@ -85,22 +85,31 @@ inline Real distance3(Real _x, Real _y, Real _z) {
     return d2 + floor(c * 1.75 / TutorialApplication::GRID_SPACING) * TutorialApplication::GRID_SPACING;
 }
 
-void TutorialApplication::createCones(ManualObject *obj, Vector3 pos, Vector3 dir)
+void TutorialApplication::createCones(ManualObject *obj, std::vector<Vector3> &seen, Vector3 pos, Vector3 dir)
 {
-    int bound = TutorialApplication::GRID_SIZE;
-    int spacing = TutorialApplication::GRID_SPACING;
+    if (std::find(seen.begin(), seen.end(), pos) != seen.end()) {
+        // we've already drawn this point
+        return;
+    }
+    seen.push_back(pos);
 
     for (Vector3 c : CONE_CASES) {
         if (c.angleBetween(dir) <= Degree(45)) {
             Vector3 pNext = pos + c;
             Real distance = distance3(pNext.x, pNext.y, pNext.z);
             if (distance <= CONE_SIZE) {
-                createCones(obj, pNext, dir);
+                createCones(obj, seen, pNext, dir);
             }
         }
     }
 
-    obj->position(pos);
+    Entity *cube = m_SceneMgr->createEntity(SceneManager::PT_CUBE);
+    cube->setMaterialName("Template/Red50");
+    SceneNode *node = m_pointNode->createChildSceneNode();
+    node->attachObject(cube);
+    Real offset = GRID_SPACING / 2;
+    node->setPosition(pos.x + offset, pos.y + offset, pos.z + offset);
+    node->scale(0.1, 0.1, 0.1);
 }
 
 void TutorialApplication::createScene(void)
@@ -144,7 +153,7 @@ void TutorialApplication::createScene(void)
 //    }
     // for each cone case
     ManualObject *cone = m_SceneMgr->createManualObject("conePoints");
-    cone->begin(BASE_MATERIAL, RenderOperation::OT_LINE_STRIP);
+    cone->begin(BASE_MATERIAL, RenderOperation::OT_LINE_LIST);
 //    for (auto c : CONE_CASES) {
 //        auto ext = (c);
 //        cone->position(Vector3::ZERO);
@@ -152,7 +161,12 @@ void TutorialApplication::createScene(void)
 //    }
 
     Vector3 p = Vector3(1, 1, 1);
-    createCones(cone, Vector3::ZERO, p);
+    std::vector<Vector3> h;
+    createCones(cone, h, Vector3::ZERO, p);
+    std::sort(h.begin(), h.end());
+    for (auto s : h) {
+        std::cout << s << std::endl;
+    }
     cone->end();
     m_pointNode->attachObject(cone);
     m_pointNode->setVisible(false);
