@@ -145,7 +145,7 @@ void TutorialApplication::createScene(void)
     for (Vector3 coneDir : CONE_CASES) {
         std::vector<Vector3> seenList;
         SceneNode *childNode = m_pointNode->createChildSceneNode();
-        m_coneNodes.emplace(coneDir, childNode);
+        m_coneNodes.push_back(childNode);
         createCones(nullptr, seenList, childNode,
                     m_pointNode->getPosition(), coneDir);
     }
@@ -193,13 +193,13 @@ bool TutorialApplication::keyPressed(const OIS::KeyEvent &arg)
         m_pointNode->setVisible(true, false);
         break;
     case OIS::KC_I:
-        m_coneNodes[CONE_CASES[prevCone]]->setVisible(false, true);
+        m_coneNodes[prevCone]->setVisible(false, true);
         prevCone++;
         if (prevCone == CONE_CASES.size()) {
             prevCone = 0;
         }
-        std::cout << "setting " << m_coneNodes[CONE_CASES[prevCone]] << " visible" << std::endl;
-        m_coneNodes[CONE_CASES[prevCone]]->setVisible(true, true);
+        std::cout << "setting " << m_coneNodes[prevCone] << " visible" << std::endl;
+        m_coneNodes[prevCone]->setVisible(true, true);
         break;
     }
 

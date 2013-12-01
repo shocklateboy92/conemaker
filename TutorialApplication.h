@@ -65,7 +65,7 @@ private:
 
     std::vector<Ogre::Vector3> m_ogres;
     Ogre::SceneNode *m_pointNode;
-    std::map<Ogre::Vector3, Ogre::SceneNode*> m_coneNodes;
+    std::vector<Ogre::SceneNode*> m_coneNodes;
 };
 
 #endif // #ifndef __TutorialApplication_h_
