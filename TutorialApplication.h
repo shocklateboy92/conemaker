@@ -55,7 +55,7 @@ protected:
 
 private:
     Ogre::Ray getMouseRay(void);
-    void createCones(Ogre::ManualObject *obj, std::vector<Ogre::Vector3> &seen, Ogre::Vector3 pos, Ogre::Vector3 dir);
+    void createCones(Ogre::ManualObject *obj, std::vector<Ogre::Vector3> &seen, Ogre::SceneNode *parentNode, Ogre::Vector3 pos, Ogre::Vector3 dir);
 
     Ogre::SceneNode *m_cursorNode;
     Ogre::Plane m_activeLevel;
@@ -65,6 +65,7 @@ private:
 
     std::vector<Ogre::Vector3> m_ogres;
     Ogre::SceneNode *m_pointNode;
+    std::map<Ogre::Vector3, Ogre::SceneNode*> m_coneNodes;
 };
 
 #endif // #ifndef __TutorialApplication_h_

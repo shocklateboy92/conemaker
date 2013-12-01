@@ -85,7 +85,7 @@ inline Real distance3(Real _x, Real _y, Real _z) {
     return d2 + floor(c * 1.75 / TutorialApplication::GRID_SPACING) * TutorialApplication::GRID_SPACING;
 }
 
-void TutorialApplication::createCones(ManualObject *obj, std::vector<Vector3> &seen, Vector3 pos, Vector3 dir)
+void TutorialApplication::createCones(ManualObject *obj, std::vector<Vector3> &seen, SceneNode *parentNode, Vector3 pos, Vector3 dir)
 {
     if (std::find(seen.begin(), seen.end(), pos) != seen.end()) {
         // we've already drawn this point
@@ -98,14 +98,14 @@ void TutorialApplication::createCones(ManualObject *obj, std::vector<Vector3> &s
             Vector3 pNext = pos + c;
             Real distance = distance3(pNext.x, pNext.y, pNext.z);
             if (distance <= CONE_SIZE) {
-                createCones(obj, seen, pNext, dir);
+                createCones(obj, seen, parentNode, pNext, dir);
             }
         }
     }
 
     Entity *cube = m_SceneMgr->createEntity(SceneManager::PT_CUBE);
     cube->setMaterialName("Template/Red50");
-    SceneNode *node = m_pointNode->createChildSceneNode();
+    SceneNode *node = parentNode->createChildSceneNode();
     node->attachObject(cube);
     Real offset = GRID_SPACING / 2;
     node->setPosition(pos.x + offset, pos.y + offset, pos.z + offset);
@@ -140,37 +140,17 @@ void TutorialApplication::createScene(void)
     m_cursorNode = m_SceneMgr->getRootSceneNode()->createChildSceneNode("cursorNode");
     m_cursorNode->attachObject(plane);
 
+    // Create all possible cones, so they can be shown later
     m_pointNode = m_cursorNode->createChildSceneNode("coneBase");
-
-//    for (Vector3 c : CONE_CASES) {
-//        ManualObject *cone = m_SceneMgr->createManualObject();
-//        cone->begin(BASE_MATERIAL, RenderOperation::OT_LINE_LIST);
-//        cone->position(Vector3::ZERO);
-//        cone->position(c);
-//        cone->end();
-
-//        m_pointNode->createChildSceneNode();
-//    }
-    // for each cone case
-    ManualObject *cone = m_SceneMgr->createManualObject("conePoints");
-    cone->begin(BASE_MATERIAL, RenderOperation::OT_LINE_LIST);
-//    for (auto c : CONE_CASES) {
-//        auto ext = (c);
-//        cone->position(Vector3::ZERO);
-//        cone->position(ext);
-//    }
-
-    Vector3 p = Vector3(1, 1, 1);
-    std::vector<Vector3> h;
-    createCones(cone, h, Vector3::ZERO, p);
-    std::sort(h.begin(), h.end());
-    for (auto s : h) {
-        std::cout << s << std::endl;
+    for (Vector3 coneDir : CONE_CASES) {
+        std::vector<Vector3> seenList;
+        SceneNode *childNode = m_pointNode->createChildSceneNode();
+        m_coneNodes.emplace(coneDir, childNode);
+        createCones(nullptr, seenList, childNode,
+                    m_pointNode->getPosition(), coneDir);
     }
-    cone->end();
-    m_pointNode->attachObject(cone);
-    m_pointNode->setVisible(false);
-
+    assert (m_coneNodes.size() == CONE_CASES.size());
+    m_pointNode->setVisible(false, true);
 }
 
 void TutorialApplication::createCamera()
@@ -188,6 +168,7 @@ Ray TutorialApplication::getMouseRay() {
                 (Real) s.Y.abs / vp->getActualHeight());
 }
 
+static std::size_t prevCone = 0;
 bool TutorialApplication::keyPressed(const OIS::KeyEvent &arg)
 {
     switch (arg.key) {
@@ -209,7 +190,16 @@ bool TutorialApplication::keyPressed(const OIS::KeyEvent &arg)
     case OIS::KC_3:
         m_mode = WitchMode;
         m_cursorNode->setVisible(false);
-        m_pointNode->setVisible(true);
+        m_pointNode->setVisible(true, false);
+        break;
+    case OIS::KC_I:
+        m_coneNodes[CONE_CASES[prevCone]]->setVisible(false, true);
+        prevCone++;
+        if (prevCone == CONE_CASES.size()) {
+            prevCone = 0;
+        }
+        std::cout << "setting " << m_coneNodes[CONE_CASES[prevCone]] << " visible" << std::endl;
+        m_coneNodes[CONE_CASES[prevCone]]->setVisible(true, true);
         break;
     }
 
