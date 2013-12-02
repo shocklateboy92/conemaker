@@ -141,7 +141,7 @@ void TutorialApplication::createScene(void)
     m_cursorNode->attachObject(plane);
 
     // Create all possible cones, so they can be shown later
-    m_pointNode = m_cursorNode->createChildSceneNode("coneBase");
+    m_pointNode = m_SceneMgr->getRootSceneNode()->createChildSceneNode("coneBase");
     for (Vector3 coneDir : CONE_CASES) {
         std::vector<Vector3> seenList;
         SceneNode *childNode = m_pointNode->createChildSceneNode();
@@ -237,6 +237,11 @@ bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
                             pos.y,
                             floor(pos.z / GRID_SPACING) * GRID_SPACING);
             m_cursorNode->setPosition(gridPos);
+            auto pointPos =
+                    Vector3(round(pos.x / GRID_SPACING) * GRID_SPACING,
+                            pos.y,
+                            round(pos.z / GRID_SPACING) * GRID_SPACING);
+            m_pointNode->setPosition(pointPos);
 
             if (m_mode == WitchMode) {
                 for (std::size_t i = 0; i < CONE_CASES.size(); i++) {
