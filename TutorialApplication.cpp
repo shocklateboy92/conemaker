@@ -238,18 +238,30 @@ bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
                             floor(pos.z / GRID_SPACING) * GRID_SPACING);
             m_cursorNode->setPosition(gridPos);
 
-            for (Vector3 c : CONE_CASES) {
-                bool containsCreatures = true;
-                for (Vector3 creature : m_ogres) {
-                    Vector3 dir = creature - gridPos;
+            if (m_mode == WitchMode) {
+                for (std::size_t i = 0; i < CONE_CASES.size(); i++) {
+                    auto c = CONE_CASES[i];
+                    bool containsCreatures = true;
+                    for (Vector3 creature : m_ogres) {
+                        Vector3 dir = creature - gridPos;
 
-                    // cone is facing wrong way for creature
-                    if (dir.angleBetween(c) > Degree(45)) {
-                        containsCreatures = false;
-                        break;
+                        // cone is facing wrong way for creature
+                        if (dir.angleBetween(c) > Degree(45)) {
+                            containsCreatures = false;
+                            break;
+                        }
+
+                        // creature too far away for cone
+                        if (distance3(dir.x, dir.y, dir.z) > CONE_SIZE) {
+                            containsCreatures = false;
+                        }
                     }
 
-                    // creature too far away for cone
+                    if (containsCreatures) {
+                        m_coneNodes[i]->setVisible(true);
+                    } else {
+                        m_coneNodes[i]->setVisible(false);
+                    }
                 }
             }
         }
