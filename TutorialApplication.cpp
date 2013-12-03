@@ -46,6 +46,56 @@ void TutorialApplication::createFrameListener()
 }
 
 //-------------------------------------------------------------------------------------
+
+void scaleMesh(const Ogre::Entity *_ent, const Ogre::Vector3 &_scale)
+{
+    bool added_shared = false;
+    Ogre::Mesh* mesh = _ent->getMesh().getPointer();
+    Ogre::Vector3 Minimum=mesh->getBounds().getMaximum();
+    Ogre::Vector3 Maximum=mesh->getBounds().getMinimum();
+    // Run through the submeshes, modifying the data
+    for(int i = 0;i < mesh->getNumSubMeshes();i++)
+    {
+        Ogre::SubMesh* submesh = mesh->getSubMesh(i);
+        Ogre::VertexData* vertex_data = submesh->useSharedVertices ? mesh->sharedVertexData : submesh->vertexData;
+        if((!submesh->useSharedVertices)||(submesh->useSharedVertices && !added_shared))
+        {
+            if(submesh->useSharedVertices)
+            {
+                added_shared = true;
+            }
+            const Ogre::VertexElement* posElem = vertex_data->vertexDeclaration->findElementBySemantic(Ogre::VES_POSITION);
+            Ogre::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(posElem->getSource());
+            // lock buffer for read and write access
+            unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+            Ogre::Real* pReal;
+            for(size_t j = 0; j < vertex_data->vertexCount; ++j, vertex += vbuf->getVertexSize())
+            {
+                posElem->baseVertexPointerToElement(vertex, &pReal);
+                // modify x coord
+                (*pReal) *= _scale.x;
+                ++pReal;
+                // modify y coord
+                (*pReal) *= _scale.y;
+                ++pReal;
+                // modify z coord
+                (*pReal) *= _scale.z;
+                pReal-=2;
+                Minimum.x=Minimum.x<(*pReal)?Minimum.x:(*pReal);
+                Maximum.x=Maximum.x>(*pReal)?Maximum.x:(*pReal);
+                ++pReal;
+                Minimum.y=Minimum.y<(*pReal)?Minimum.y:(*pReal);
+                Maximum.y=Maximum.y>(*pReal)?Maximum.y:(*pReal);
+                ++pReal;
+                Minimum.z=Minimum.z<(*pReal)?Minimum.z:(*pReal);
+                Maximum.z=Maximum.z>(*pReal)?Maximum.z:(*pReal);
+            }
+            vbuf->unlock();
+        }
+    }
+    mesh->_setBounds(Ogre::AxisAlignedBox(Minimum,Maximum),false);
+}
+
 const std::vector<Vector3> make_cases() {
     std::vector<Vector3> v;
     for (int x = -1; x <= 1; x++) {
@@ -107,8 +157,10 @@ void TutorialApplication::createCones(ManualObject *obj, std::vector<Vector3> &s
     cube->setMaterialName("Template/Red50");
     SceneNode *node = parentNode->createChildSceneNode();
     node->attachObject(cube);
-    Real offset = GRID_SPACING / 2;
-    node->setPosition(pos.x + offset, pos.y + offset, pos.z + offset);
+    Vector3 offset(pos.x / -abs(pos.x) * GRID_SPACING / 2,
+                   pos.y / -abs(pos.y) * GRID_SPACING / 2,
+                   pos.z / -abs(pos.z) * GRID_SPACING / 2);
+    node->setPosition(pos - offset);
     node->scale(0.1, 0.1, 0.1);
 }
 
@@ -140,8 +192,15 @@ void TutorialApplication::createScene(void)
     m_cursorNode = m_SceneMgr->getRootSceneNode()->createChildSceneNode("cursorNode");
     m_cursorNode->attachObject(plane);
 
-    // Create all possible cones, so they can be shown later
+    // Create the cursor point
     m_pointNode = m_SceneMgr->getRootSceneNode()->createChildSceneNode("coneBase");
+    Entity *circle = m_SceneMgr->createEntity(SceneManager::PT_SPHERE);
+    scaleMesh(circle, {0.05f, 0.05f, 0.05f});
+    circle->setMaterialName(BASE_MATERIAL);
+    m_pointNode->attachObject(circle);
+//    m_pointNode->scale(0.05f, 0.05f, 0.05f);
+
+    // Create all possible cones, so they can be shown later
     for (Vector3 coneDir : CONE_CASES) {
         std::vector<Vector3> seenList;
         SceneNode *childNode = m_pointNode->createChildSceneNode();
@@ -248,7 +307,7 @@ bool TutorialApplication::mouseMoved(const OIS::MouseEvent &arg)
                     auto c = CONE_CASES[i];
                     bool containsCreatures = true;
                     for (Vector3 creature : m_ogres) {
-                        Vector3 dir = creature - gridPos;
+                        Vector3 dir = creature - pointPos;
 
                         // cone is facing wrong way for creature
                         if (dir.angleBetween(c) > Degree(45)) {
