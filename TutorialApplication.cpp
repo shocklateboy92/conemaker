@@ -152,15 +152,20 @@ void TutorialApplication::createCones(ManualObject *obj, std::vector<Vector3> &s
             }
         }
     }
+    Vector3 d = Vector3::ZERO - pos;
+    if (d.x == 0 || d.y == 0 || d.z == 0) {
+        return;
+    }
+    d = Vector3(d.x / abs(d.x),
+                d.y / abs(d.y),
+                d.z / abs(d.z));
+    d = d * (GRID_SPACING / 2);
 
     Entity *cube = m_SceneMgr->createEntity(SceneManager::PT_CUBE);
     cube->setMaterialName("Template/Red50");
     SceneNode *node = parentNode->createChildSceneNode();
     node->attachObject(cube);
-    Vector3 offset(pos.x / -abs(pos.x) * GRID_SPACING / 2,
-                   pos.y / -abs(pos.y) * GRID_SPACING / 2,
-                   pos.z / -abs(pos.z) * GRID_SPACING / 2);
-    node->setPosition(pos - offset);
+    node->setPosition(pos + d);
     node->scale(0.1, 0.1, 0.1);
 }
 
